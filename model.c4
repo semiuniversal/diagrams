@@ -90,6 +90,12 @@ model {
       description 'Support staff can report outages, which are displayed on the system status page.'
     }
 
+    classicPeopleRequest = module 'Classic People Request' {
+      description 'Specialized request component for HR purposes. Confidential and accessible only to authorized users.'
+    }
+
+    hrUser -> classicPeopleRequest 'uses'
+
     scimConnector = system 'SCIM Connector' {
       description 'System for SCIM-based user provisioning and deprovisioning between SML subscribers and SM Classic.'
 
@@ -243,6 +249,10 @@ model {
 
   sysAdmin = actor 'System Administrator' {
     description 'Platform operator with full system visibility and access.'
+  }
+
+  hrUser = actor 'HR User' {
+    description 'Staff in HR department who uses the People Operations tenant.'
   }
 
   user -> smClassic 'uses'
