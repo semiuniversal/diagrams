@@ -1,0 +1,342 @@
+specification {
+  element actor {
+    style {
+      shape person
+    }
+  }
+  element platform {
+    style {
+      color primary
+    }
+  }
+  element application {
+    style {
+      color secondary
+    }
+  }
+  element module {
+    style {
+      color indigo
+    }
+  }
+  element service {
+    style {
+      color green
+    }
+  }
+  element subscriber {
+    style {
+      color amber
+    }
+  }
+  element datastore {
+    style {
+      shape storage
+      color muted
+    }
+  }
+  element integration {
+    style {
+      color gray
+    }
+  }
+
+  relationship uses
+  relationship provides
+  relationship connects
+  relationship delegates
+}
+
+model {
+  user = actor 'End User'
+
+  smClassic = application 'SM Classic' {
+    description 'Legacy Pega Service Management application. Being augmented with agentic search. Will be superseded by SM New at cutover.'
+
+    search = module 'Service Catalog Search' {
+      description 'Elastic-based search across 600+ service catalog entries. Being replaced by agentic chatbot interface.'
+    }
+
+    classicRequest = module 'Classic Request' {
+      description 'Request handling component within SM Classic.'
+
+      classicRequestTask = module 'Classic Request Task' {
+        description 'Task component within Classic Request.'
+      }
+    }
+
+    classicIncident = module 'Classic Incident' {
+      description 'Incident handling component within SM Classic.'
+
+      classicIncidentTask = module 'Classic Incident Task' {
+        description 'Task component within Classic Incident.'
+      }
+    }
+
+    classicProblem = module 'Classic Problem' {
+      description 'Handles ITSM problem reports within SM Classic.'
+
+      classicRca = module 'Classic RCA' {
+        description 'Root Cause Analysis. Process to determine the underlying cause of a problem.'
+      }
+
+      classicCra = module 'Classic CRA' {
+        description 'Corrective Action. The resolution of the problem identified through RCA.'
+      }
+    }
+
+    adminTools = module 'Administrative Tools' {
+      description 'Administrative utilities and tools within SM Classic.'
+
+      workBasketMgmt = module 'Work Basket Management' {
+        description 'Component within Administrative Tools for managing work baskets.'
+      }
+
+      serviceCatalogMgmt = module 'Service Catalog Management' {
+        description 'Component within Administrative Tools for managing the service catalog.'
+      }
+
+      serviceCatalogMgmt -> serviceCatalog 'manages'
+    }
+
+    search -> serviceCatalog 'indexes'
+    adminTools.workBasketMgmt -> workBaskets 'manages'
+
+    serviceCatalog = module 'Service Catalog' {
+      description 'Service catalog component within SM Classic.'
+    }
+
+    workBaskets = module 'Work Baskets' {
+      description 'Work queue management component within SM Classic. Routes and assigns work items to appropriate teams and individuals.'
+    }
+
+    classicIncident -> classicProblem 'converts to'
+    classicIncident -> classicRequest 'converts to'
+    classicRequest -> classicIncident 'converts to'
+    serviceCatalog -> classicRequest 'controls'
+    serviceCatalog -> classicIncident 'controls'
+  }
+
+  smNew = application 'SM New' {
+    description 'Greenfield replacement for SM Classic. Built on Pega Constellation design system. Agentic-first interface. Pending Monday approval. Details TBD.'
+  }
+
+  agenticFabric = service 'Agentic Process Fabric' {
+    description 'Pega-hosted agentic service. Defines agents with prompts, skills, and data source connectors. Passes through to externally hosted LLM (Azure OpenAI). Expressed into SM Classic via API. Implementation partially specified.'
+
+    agent = module 'SM Agent' {
+      description 'Conversational agent for SM Classic. Interrogates user to identify service offering, confirms intent, creates ticket automatically, returns SSO link to created record.'
+    }
+  }
+
+  smlProvider = platform 'SML Provider' {
+    description 'Centrally managed Service Management Launchpad platform. Multi-tenant. Individual subscribers are isolated instances.'
+
+    launchpad = module 'Launchpad' {
+      description 'Base platform layer.'
+    }
+
+    mdm = module 'MDM' {
+      description 'Master Data Management layer. Sits on top of Launchpad.'
+    }
+
+    cm = module 'Change Management' {
+      description 'ITIL change control module. Built and released.'
+    }
+
+    ticketMgmt = module 'Ticket Management' {
+      description 'Core ticketing module. Built, not yet released. Sits on MDM.'
+    }
+
+    request = module 'Request' {
+      description 'Request feature within Ticket Management.'
+    }
+
+    catalog = module 'Service Catalog' {
+      description 'Shared service catalog. Extension of the SML platform.'
+    }
+
+    mdm -> launchpad 'sits on top of'
+    ticketMgmt -> mdm 'sits on top of'
+    cm -> mdm 'sits on top of'
+    request -> ticketMgmt 'feature of'
+  }
+
+  dxApi = integration 'DX API' {
+    description 'Pega inter-application communication and front-end rendering layer for modern Pega applications. Connects SM Classic and SM New to SML subscriber instances. Passes request data as query string parameters.'
+  }
+
+  emailListener = service 'Email Listener' {
+    description 'Shared inbound email processing service. Connects to Office 365. Parses email headers, interprets intent via AI, matches against service catalog via vector search, returns candidate request types.'
+
+    aiPrompt = module 'AI Prompt Engine' {
+      description 'Vectorized matching of email content against service catalog. Returns most likely request type candidates.'
+    }
+  }
+
+  kb = datastore 'KB' {
+    description 'Knowledge Base. Pega Knowledge instance. Functions as RAG store for service catalog contents, ticket handling rules, and system-level customization.'
+  }
+
+  tps = datastore 'Third Party Software' {
+    description 'Third Party Software list. Data source for agent.'
+  }
+
+  itkm = datastore 'ITKM' {
+    description 'IT Knowledge Management. Self-service help article library. Data source for agent.'
+  }
+
+  itDept = subscriber 'IT Department' {
+    description 'SML subscriber. Isolated tenant. Change Management only. Highest privilege - internal IT use.'
+
+    itCm = module 'Change Management'
+  }
+
+  people = subscriber 'People Operations' {
+    description 'SML subscriber. Isolated tenant. Highly confidential tickets - not readable by platform administrators. Request only.'
+
+    peopleRequest = module 'Request'
+  }
+
+  legal = subscriber 'Legal' {
+    description 'SML subscriber. Isolated tenant. Confidential. Request only.'
+
+    legalRequest = module 'Request'
+  }
+
+  facilities = subscriber 'Facilities' {
+    description 'SML subscriber. First production deployment. Request with richer service catalog configuration.'
+
+    facRequest = module 'Request'
+    facCatalog = module 'Service Catalog' {
+      description 'Facilities-specific service catalog configuration.'
+    }
+  }
+
+  user -> smClassic 'uses'
+  user -> smNew 'uses'
+  smClassic -> agenticFabric 'invokes agent via API'
+  smClassic.search -> kb 'searches'
+  agenticFabric.agent -> kb 'queries'
+  agenticFabric.agent -> tps 'queries'
+  agenticFabric.agent -> itkm 'queries'
+  agenticFabric.agent -> smlProvider.catalog 'queries service catalog'
+  smClassic -> dxApi 'routes requests via'
+  dxApi -> facilities 'creates request in'
+  dxApi -> itDept 'creates request in'
+  dxApi -> people 'creates request in'
+  dxApi -> legal 'creates request in'
+  smNew -> dxApi 'routes requests via'
+  emailListener -> smlProvider 'creates requests in'
+  emailListener.aiPrompt -> kb 'vector search against'
+  emailListener.aiPrompt -> smlProvider.catalog 'matches against'
+  emailListener -> smlProvider.catalog 'gets service offering specific configuration'
+  itDept -[provides]-> smlProvider.cm 'subscriber of'
+  people -[provides]-> smlProvider.request 'subscriber of'
+  legal -[provides]-> smlProvider.request 'subscriber of'
+  facilities -[provides]-> smlProvider.request 'subscriber of'
+}
+
+views {
+  view index {
+    title 'SM Platform - Landscape'
+    include *
+    autoLayout LeftRight
+  }
+
+  view of smlProvider {
+    title 'SML Provider - Internals'
+    include *
+    autoLayout TopBottom
+  }
+
+  view of agenticFabric {
+    title 'Agentic Process Fabric'
+    include *
+    include agenticFabric.agent -> kb
+    include agenticFabric.agent -> tps
+    include agenticFabric.agent -> itkm
+    autoLayout LeftRight
+  }
+
+  view of emailListener {
+    title 'Email Listener - Configuration'
+    include *
+    include emailListener -> smlProvider
+    include emailListener.aiPrompt -> kb
+    autoLayout LeftRight
+  }
+
+  view subscribers {
+    title 'SML Subscribers'
+    include smlProvider
+    include itDept
+    include people
+    include legal
+    include facilities
+    include smlProvider -> itDept
+    include smlProvider -> people
+    include smlProvider -> legal
+    include smlProvider -> facilities
+    autoLayout LeftRight
+  }
+
+  view integrations {
+    title 'Integration View - DX API'
+    include smClassic
+    include smNew
+    include dxApi
+    include facilities
+    include itDept
+    include people
+    include legal
+    include smClassic -> dxApi
+    include smNew -> dxApi
+    include dxApi -> facilities
+    include dxApi -> itDept
+    include dxApi -> people
+    include dxApi -> legal
+    autoLayout LeftRight
+  }
+
+  view mondayPitch {
+    title 'Overview - Full Picture'
+    include *
+    include smlProvider.*
+    include agenticFabric.*
+    include emailListener.*
+    autoLayout LeftRight
+  }
+
+  view smClassicComponents of smClassic {
+    title 'SM Classic Components'
+    include *
+    include smClassic -> agenticFabric
+    include smClassic -> dxApi
+    include smClassic.search -> kb
+    autoLayout TopBottom
+  }
+
+  view everything {
+    title 'Everything'
+    include *
+    include smClassic.*
+    include smClassic.**
+    include smNew.**
+    include agenticFabric.*
+    include agenticFabric.**
+    include smlProvider.*
+    include smlProvider.**
+    include emailListener.*
+    include emailListener.**
+    include itDept.*
+    include itDept.**
+    include people.*
+    include people.**
+    include legal.*
+    include legal.**
+    include facilities.*
+    include facilities.**
+    autoLayout LeftRight
+  }
+}
