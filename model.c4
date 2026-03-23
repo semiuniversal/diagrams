@@ -85,6 +85,14 @@ model {
       }
     }
 
+    classicOutage = module 'Classic Outage' {
+      description 'Support staff can report outages, which are displayed on the system status page.'
+    }
+
+    systemStatusPage = module 'System Status Page' {
+      description 'Support staff can report outages, which are displayed on the system status page.'
+    }
+
     adminTools = module 'Administrative Tools' {
       description 'Administrative utilities and tools within SM Classic.'
 
@@ -97,16 +105,18 @@ model {
       }
 
       serviceCatalogMgmt -> serviceCatalog 'manages'
+      contentAdmin -> adminTools 'uses'
     }
 
     search -> serviceCatalog 'indexes'
     adminTools.workBasketMgmt -> workBaskets 'manages'
+    classicOutage -> systemStatusPage 'manages'
 
     serviceCatalog = module 'Service Catalog' {
       description 'Service catalog component within SM Classic.'
     }
 
-    workBaskets = module 'Work Baskets' {
+    workBaskets = module 'Workbaskets' {
       description 'Work queue management component within SM Classic. Routes and assigns work items to appropriate teams and individuals.'
     }
 
@@ -213,6 +223,14 @@ model {
     }
   }
 
+  contentAdmin = actor 'Content Administrator' {
+    description 'Staff responsible for managing content in the service catalog and knowledge base.'
+  }
+
+  sysAdmin = actor 'System Administrator' {
+    description 'Platform operator with full system visibility and access.'
+  }
+
   user -> smClassic 'uses'
   user -> smNew 'uses'
   smClassic -> agenticFabric 'invokes agent via API'
@@ -269,15 +287,10 @@ views {
 
   view subscribers {
     title 'SML Subscribers'
-    include smlProvider
     include itDept
     include people
     include legal
     include facilities
-    include smlProvider -> itDept
-    include smlProvider -> people
-    include smlProvider -> legal
-    include smlProvider -> facilities
     autoLayout LeftRight
   }
 
