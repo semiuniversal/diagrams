@@ -29,6 +29,7 @@ specification {
       color amber
     }
   }
+  element system
   element datastore {
     style {
       shape storage
@@ -89,6 +90,15 @@ model {
       description 'Support staff can report outages, which are displayed on the system status page.'
     }
 
+    scimConnector = system 'SCIM Connector' {
+      description 'System for SCIM-based user provisioning and deprovisioning between SML subscribers and SM Classic.'
+
+      contentAdmin -> scimConnector 'grants access group'
+      sysAdmin -> scimConnector 'grants access group'
+    }
+
+    sailPoint -> scimConnector 'provisions entitlements'
+
     systemStatusPage = module 'System Status Page' {
       description 'Support staff can report outages, which are displayed on the system status page.'
     }
@@ -129,6 +139,10 @@ model {
 
   smNew = application 'SM New' {
     description 'Greenfield replacement for SM Classic. Built on Pega Constellation design system. Agentic-first interface. Pending Monday approval. Details TBD.'
+  }
+
+  sailPoint = system 'SailPoint' {
+    description 'Identity management platform. Provides identity lifecycle management and access governance.'
   }
 
   agenticFabric = service 'Agentic Process Fabric' {
@@ -232,7 +246,7 @@ model {
   }
 
   user -> smClassic 'uses'
-  user -> smNew 'uses'
+  sysAdmin -> smClassic 'manages'
   smClassic -> agenticFabric 'invokes agent via API'
   smClassic.search -> kb 'searches'
   agenticFabric.agent -> kb 'queries'
