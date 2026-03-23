@@ -1,2 +1,2 @@
 .specstory/
-sextant.yaml
+# sextant.yaml # Exclude if a real public API key is used. Don't commit your API keys to the repo.
